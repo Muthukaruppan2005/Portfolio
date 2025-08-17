@@ -1,11 +1,11 @@
-// Load environment variables for security.
+// Load environment variables securely
 require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
-// Define the Contact schema and model.
+// Define Contact schema
 const contactSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
@@ -14,20 +14,21 @@ const contactSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 });
 
-// Use existing model if exists to avoid OverwriteModelError in serverless environments
+// Use existing model if already compiled to avoid OverwriteModelError
 const Contact = mongoose.models.Contact || mongoose.model('Contact', contactSchema);
 
 const app = express();
 
-// MongoDB connection function optimized for serverless
+// MongoDB connection for serverless environment
 const connectToDatabase = async () => {
-  if (mongoose.connection.readyState >= 1) return mongoose.connection;
-
+  if (mongoose.connection.readyState >= 1) {
+    return mongoose.connection;
+  }
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      maxPoolSize: 1, // important for serverless
+      maxPoolSize: 1, // Important for serverless
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
@@ -39,13 +40,13 @@ const connectToDatabase = async () => {
   }
 };
 
-// CORS configuration - Update with your actual deployed frontend URL
+// CORS config — update the origin with your deployed frontend URL
 const corsOptions = {
   origin: [
     'http://localhost:3000',
-    'http://localhost:5173', // vite dev server url
-    'https://portfolio-muthukaruppan2005.vercel.app', // replace with your Vercel URL
-    'https://*.vercel.app' // allow all preview deployments
+    'http://localhost:5173', // Vite dev server if used
+    'https://portfolio-muthukaruppan2005.vercel.app', // Replace with your Vercel frontend URL
+    'https://*.vercel.app' // Allow preview deployments
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -136,13 +137,13 @@ const portfolioData = {
     }
   ],
   contactForm: {
-      subtitle: "Feel free to reach out, I'll get back to you soon.",
-      form: [
-          { label: "Name", type: "text", name: "name", required: true, placeholder: "Your Name" },
-          { label: "Email", type: "email", name: "email", required: true, placeholder: "your.email@example.com" },
-          { label: "Phone Number", type: "tel", name: "phoneNumber", required: false, placeholder: "(+91) 987-654-3210" },
-          { label: "Message", type: "textarea", name: "message", required: true, placeholder: "Tell me about your project..." }
-      ]
+    subtitle: "Feel free to reach out, I'll get back to you soon.",
+    form: [
+      { label: "Name", type: "text", name: "name", required: true, placeholder: "Your Name" },
+      { label: "Email", type: "email", name: "email", required: true, placeholder: "your.email@example.com" },
+      { label: "Phone Number", type: "tel", name: "phoneNumber", required: false, placeholder: "(+91) 987-654-3210" },
+      { label: "Message", type: "textarea", name: "message", required: true, placeholder: "Tell me about your project..." }
+    ]
   }
 };
 
@@ -158,28 +159,28 @@ app.get('/api/portfolio', (req, res) => {
 app.post('/api/contact', async (req, res) => {
   try {
     await connectToDatabase();
-    
+
     const { name, email, phoneNumber, message } = req.body;
-    
+
     if (!name || !email || !message) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Name, email, and message are required.' 
+      return res.status(400).json({
+        success: false,
+        message: 'Name, email, and message are required.'
       });
     }
-    
+
     const newContact = new Contact({ name, email, phoneNumber, message });
     await newContact.save();
-    
-    res.status(201).json({ 
-      success: true, 
-      message: 'Message sent successfully!' 
+
+    res.status(201).json({
+      success: true,
+      message: 'Message sent successfully!'
     });
   } catch (error) {
     console.error('Contact form error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to send message. Please try again.' 
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send message. Please try again.'
     });
   }
 });
@@ -188,13 +189,14 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Backend is running' });
 });
 
-// Handle 404 for API routes
-app.use('/api/*', (req, res) => {
+// Handle undefined /api routes with 404
+app.use('/api/', (req, res) => {
   res.status(404).json({ error: 'API route not found' });
 });
 
 const PORT = process.env.PORT || 5000;
 
+// Start server only in development mode
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
