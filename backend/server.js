@@ -26,8 +26,6 @@ const connectToDatabase = async () => {
   }
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       maxPoolSize: 1, // Important for serverless
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
@@ -148,8 +146,10 @@ const portfolioData = {
   }
 };
 
-app.get('/api/portfolio', (req, res) => {
+// API endpoint to serve your portfolio data.
+app.get('/api/portfolio', async (req, res) => {
   try {
+    await connectToDatabase();
     res.json(portfolioData);
   } catch (error) {
     console.error('Portfolio API error:', error);
@@ -157,6 +157,7 @@ app.get('/api/portfolio', (req, res) => {
   }
 });
 
+// API endpoint to handle contact form submissions.
 app.post('/api/contact', async (req, res) => {
   try {
     await connectToDatabase();
