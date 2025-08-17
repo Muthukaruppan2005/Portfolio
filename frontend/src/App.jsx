@@ -6,20 +6,17 @@ import aluminiImage from './assets/alumini.png';
 import vrImage from './assets/vr.png';
 import portfolioImage from './assets/portfolio.png';
 
-
 function App() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '', phoneNumber: '', message: '' });
   const [formStatus, setFormStatus] = useState('');
 
- 
-  // Replace the placeholder URL with your live Render backend URL
-  const backendUrl = 'https://portfolio-backend-btyw.onrender.com';
-
+  // No need for a backendUrl variable anymore
+  // The fetch calls will use a relative path
 
   useEffect(() => {
-    fetch(`${backendUrl}/api/portfolio`)
+    fetch(`/api/portfolio`) // Use a relative path
       .then(response => response.json())
       .then(result => {
         setData(result);
@@ -29,7 +26,7 @@ function App() {
         console.error('Error fetching portfolio data:', error);
         setIsLoading(false);
       });
-  }, [backendUrl]);
+  }, []);
 
   const projectImages = {
     'Alumini Connect': aluminiImage,
@@ -57,7 +54,7 @@ function App() {
     e.preventDefault();
     setFormStatus('Sending...');
     try {
-      const response = await fetch(`${backendUrl}/api/contact`, {
+      const response = await fetch(`/api/contact`, { // Use a relative path
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +86,7 @@ function App() {
   return (
     <div className="portfolio-container">
       <nav className="navbar">
-        <span className="logo" onClick={() => scrollToSection(homeRef)}>MK</span>
+        <span className="logo" onClick={() => scrollToSection(homeRef)}>K N M</span>
         <div className="nav-links">
           <a onClick={() => scrollToSection(homeRef)}>Home</a>
           <a onClick={() => scrollToSection(aboutRef)}>About</a>
@@ -102,10 +99,10 @@ function App() {
 
       <section ref={homeRef} className="hero-section">
         <h2 className="hero-welcome">Welcome to my portfolio</h2>
-        <h1 className="hero-greeting">Hi, I'm Muthukaruppan 👋</h1>
+        <h1 className="hero-greeting">Hi, I'm Muthukaruppan KN M 👋</h1>
         <p className="hero-tagline">{data.profile.tagline}</p>
         <a href="/Muthukaruppan_Resume.pdf" download="Muthukaruppan_Resume.pdf" className="resume-button">
-          Get My Resume
+          Download Resume
         </a>
       </section>
 
@@ -208,7 +205,7 @@ function App() {
           <FooterLink href={`mailto:${data.profile.contact.email}`} icon={FaEnvelope} />
           <FooterLink href={`tel:${data.profile.contact.phone}`} icon={FaPhone} />
         </div>
-        <p className="footer-copyright">&copy; {new Date().getFullYear()} Muthukaruppan. All rights reserved.</p>
+        <p className="footer-copyright">&copy; {new Date().getFullYear()} Muthukaruppan KN M. All rights reserved.</p>
       </footer>
     </div>
   );
@@ -216,6 +213,7 @@ function App() {
 
 export default App;
 
+// Helper component for footer links to keep the code clean
 function FooterLink({ href, icon: Icon }) {
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className="footer-link">

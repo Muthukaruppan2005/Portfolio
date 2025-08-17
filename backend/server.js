@@ -47,7 +47,8 @@ const portfolioData = {
     tagline: 'A passionate Computer Science and Engineering student.',
     about: [
       "Hi, I'm Muthukaruppan KN M 👋",
-      "I'm a Computer Science and Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible. Outside academics, I like experimenting with creative ideas, exploring new technologies, and solving problems through logic and design."
+      "I'm a Computer Science and Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible.",
+      "I have hands-on experience as a Data Analyst Intern and a strong foundation in C, Java, Data Structures, and problem-solving. Outside academics, I like experimenting with creative ideas, exploring new technologies, and solving problems through logic and design."
     ],
     contact: {
       email: 'muthukaruppan2005@gmail.com',
