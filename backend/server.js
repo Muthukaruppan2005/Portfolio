@@ -13,28 +13,38 @@ const contactSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: false },
   date: { type: Date, default: Date.now }
 });
+
 const Contact = mongoose.model('Contact', contactSchema);
 
-// Create the Express app
 const app = express();
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// MongoDB connection function
+const connectToDatabase = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+};
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Your portfolio data
 const portfolioData = {
   profile: {
-    name: 'Muthukaruppan KN M',
+    name: 'Muthukaruppan K N M',
     tagline: 'A passionate Computer Science and Engineering student.',
     about: [
-      'Hi, I’m Muthukaruppan KN M 👋',
-      'I am a Computer Science and Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible.',
+      "Hi, I'm Muthukaruppan 👋",
+      'I am a Computer Science Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible.',
       'I have hands-on experience as a Data Analyst Intern and a strong foundation in C, Java, Data Structures, and problem-solving. Outside academics, I like experimenting with creative ideas, exploring new technologies, and solving problems through logic and design.',
     ],
     contact: {
@@ -47,24 +57,24 @@ const portfolioData = {
   projects: [
     {
       id: 1,
-      title: 'Portfolio Website',
-      description: 'Developed my personal portfolio using React and deployed it on Vercel. Designed a responsive UI with a clean, modern layout for showcasing my work.',
-      tech: ['React.js', 'HTML5', 'CSS3', 'Vercel'],
-      image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Portfolio+Website'
-    },
-    {
-      id: 2,
       title: 'Alumini Connect',
       description: 'A web application designed to connect alumni with current students of the institution, enabling knowledge sharing, mentorship, and networking opportunities.',
       tech: ['React.js', 'HTML5', 'CSS3', 'Tailwind CSS', 'Node.js', 'Express.js', 'MongoDB', 'GitHub', 'VS Code', 'Netlify/Render'],
       image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Alumini+Connect+Platform'
     },
     {
-      id: 3,
+      id: 2,
       title: 'Power BI Dashboards',
       description: 'Built interactive dashboards for business insights. Worked with sales, customer, and performance datasets. Used filters, KPIs, and drill-down visuals to improve decision-making.',
       tech: ['Power BI', 'DAX', 'Data Visualization'],
       image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Power+BI+Dashboards'
+    },
+    {
+      id: 3,
+      title: 'Portfolio Website',
+      description: 'Developed my personal portfolio using React and deployed it on Vercel. Designed a responsive UI with a clean, modern layout for showcasing my work.',
+      tech: ['React.js', 'HTML5', 'CSS3', 'Vercel'],
+      image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Portfolio+Website'
     },
     {
       id: 4,
@@ -120,23 +130,28 @@ const portfolioData = {
   }
 };
 
-// API endpoint to serve your portfolio data.
 app.get('/api/portfolio', (req, res) => {
   res.json(portfolioData);
 });
 
-// API endpoint to handle contact form submissions.
 app.post('/api/contact', async (req, res) => {
   try {
+    await connectToDatabase();
     const { name, email, phoneNumber, message } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({ success: false, message: 'Name, email, and message are required.' });
+    }
     const newContact = new Contact({ name, email, phoneNumber, message });
     await newContact.save();
     res.status(201).json({ success: true, message: 'Message sent successfully!' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to send message.' });
+    console.error('Contact form error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send message. Please try again.' });
   }
 });
 
-// Export the app instance for Vercel
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
 module.exports = app;
