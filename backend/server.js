@@ -13,18 +13,49 @@ const contactSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: false },
   date: { type: Date, default: Date.now }
 });
+
 const Contact = mongoose.model('Contact', contactSchema);
 
 // Create the Express app
 const app = express();
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// MongoDB connection function for serverless
+const connectToDatabase = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    return mongoose.connection;
+  }
+  
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      maxPoolSize: 1, // Important for serverless
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    console.log('MongoDB connected successfully');
+    return mongoose.connection;
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+};
+
+// CORS configuration - UPDATE WITH YOUR ACTUAL VERCEL URL
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173', // Vite dev server
+    'https://your-project-name.vercel.app', // Replace with your actual Vercel URL
+    'https://*.vercel.app' // Allow all Vercel preview deployments
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
 
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Your portfolio data
@@ -33,7 +64,7 @@ const portfolioData = {
     name: 'Muthukaruppan KN M',
     tagline: 'A passionate Computer Science and Engineering student.',
     about: [
-      'Hi, I’m Muthukaruppan KN M 👋',
+      'Hi, I'm Muthukaruppan KN M 👋',
       'I am a Computer Science and Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible.',
       'I have hands-on experience as a Data Analyst Intern and a strong foundation in C, Java, Data Structures, and problem-solving. Outside academics, I like experimenting with creative ideas, exploring new technologies, and solving problems through logic and design.',
     ],
@@ -120,20 +151,53 @@ const portfolioData = {
   }
 };
 
+// API Routes
 app.get('/api/portfolio', (req, res) => {
-  res.json(portfolioData);
+  try {
+    res.json(portfolioData);
+  } catch (error) {
+    console.error('Portfolio API error:', error);
+    res.status(500).json({ error: 'Failed to fetch portfolio data' });
+  }
 });
 
 app.post('/api/contact', async (req, res) => {
   try {
+    await connectToDatabase();
+    
     const { name, email, phoneNumber, message } = req.body;
+    
+    if (!name || !email || !message) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Name, email, and message are required.' 
+      });
+    }
+    
     const newContact = new Contact({ name, email, phoneNumber, message });
     await newContact.save();
-    res.status(201).json({ success: true, message: 'Message sent successfully!' });
+    
+    res.status(201).json({ 
+      success: true, 
+      message: 'Message sent successfully!' 
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to send message.' });
+    console.error('Contact form error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send message. Please try again.' 
+    });
   }
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Backend is running' });
+});
+
+// Handle 404 for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
 });
 
 // Export the app instance for Vercel
