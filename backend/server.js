@@ -1,11 +1,11 @@
-// Load environment variables
+// Load environment variables for security.
 require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
-// Define the Contact schema and model
+// Define the Contact schema and model.
 const contactSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
@@ -16,57 +16,24 @@ const contactSchema = new mongoose.Schema({
 
 const Contact = mongoose.model('Contact', contactSchema);
 
-// Create the Express app
 const app = express();
+const port = 5000;
 
-// MongoDB connection function for serverless
-const connectToDatabase = async () => {
-  if (mongoose.connection.readyState >= 1) {
-    return mongoose.connection;
-  }
-  
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: 1, // Important for serverless
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-    console.log('MongoDB connected successfully');
-    return mongoose.connection;
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
-  }
-};
+// Connect to MongoDB using the URI from your .env file.
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-// CORS configuration - UPDATE WITH YOUR ACTUAL VERCEL URL
-const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173', // Vite dev server
-    'https://your-project-name.vercel.app', // Replace with your actual Vercel URL
-    'https://*.vercel.app' // Allow all Vercel preview deployments
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-// Middleware
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 
-// Your portfolio data
 const portfolioData = {
   profile: {
     name: 'Muthukaruppan KN M',
     tagline: 'A passionate Computer Science and Engineering student.',
     about: [
-      'Hi, I'm Muthukaruppan KN M 👋',
-      'I am a Computer Science and Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible.',
-      'I have hands-on experience as a Data Analyst Intern and a strong foundation in C, Java, Data Structures, and problem-solving. Outside academics, I like experimenting with creative ideas, exploring new technologies, and solving problems through logic and design.',
+      "Hi, I'm Muthukaruppan KN M 👋",
+      "I'm a Computer Science and Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible. Outside academics, I like experimenting with creative ideas, exploring new technologies, and solving problems through logic and design."
     ],
     contact: {
       email: 'muthukaruppan2005@gmail.com',
@@ -78,24 +45,24 @@ const portfolioData = {
   projects: [
     {
       id: 1,
-      title: 'Portfolio Website',
-      description: 'Developed my personal portfolio using React and deployed it on Vercel. Designed a responsive UI with a clean, modern layout for showcasing my work.',
-      tech: ['React.js', 'HTML5', 'CSS3', 'Vercel'],
-      image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Portfolio+Website'
-    },
-    {
-      id: 2,
       title: 'Alumini Connect',
       description: 'A web application designed to connect alumni with current students of the institution, enabling knowledge sharing, mentorship, and networking opportunities.',
       tech: ['React.js', 'HTML5', 'CSS3', 'Tailwind CSS', 'Node.js', 'Express.js', 'MongoDB', 'GitHub', 'VS Code', 'Netlify/Render'],
       image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Alumini+Connect+Platform'
     },
     {
-      id: 3,
+      id: 2,
       title: 'Power BI Dashboards',
       description: 'Built interactive dashboards for business insights. Worked with sales, customer, and performance datasets. Used filters, KPIs, and drill-down visuals to improve decision-making.',
       tech: ['Power BI', 'DAX', 'Data Visualization'],
       image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Power+BI+Dashboards'
+    },
+    {
+      id: 3,
+      title: 'Portfolio Website',
+      description: 'Developed my personal portfolio using React and deployed it on Vercel. Designed a responsive UI with a clean, modern layout for showcasing my work.',
+      tech: ['React.js', 'HTML5', 'CSS3', 'Vercel'],
+      image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Portfolio+Website'
     },
     {
       id: 4,
@@ -151,54 +118,23 @@ const portfolioData = {
   }
 };
 
-// API Routes
 app.get('/api/portfolio', (req, res) => {
-  try {
-    res.json(portfolioData);
-  } catch (error) {
-    console.error('Portfolio API error:', error);
-    res.status(500).json({ error: 'Failed to fetch portfolio data' });
-  }
+  res.json(portfolioData);
 });
 
 app.post('/api/contact', async (req, res) => {
   try {
-    await connectToDatabase();
-    
     const { name, email, phoneNumber, message } = req.body;
-    
-    if (!name || !email || !message) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Name, email, and message are required.' 
-      });
-    }
-    
     const newContact = new Contact({ name, email, phoneNumber, message });
     await newContact.save();
-    
-    res.status(201).json({ 
-      success: true, 
-      message: 'Message sent successfully!' 
-    });
+    res.status(201).json({ success: true, message: 'Message sent successfully!' });
   } catch (error) {
-    console.error('Contact form error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to send message. Please try again.' 
-    });
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to send message.' });
   }
 });
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Backend is running' });
+// Start the server and make it listen for requests.
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
-
-// Handle 404 for API routes
-app.use('/api/*', (req, res) => {
-  res.status(404).json({ error: 'API route not found' });
-});
-
-// Export the app instance for Vercel
-module.exports = app;
