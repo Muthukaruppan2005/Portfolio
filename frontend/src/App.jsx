@@ -6,49 +6,28 @@ import aluminiImage from './assets/alumini.png';
 import vrImage from './assets/vr.png';
 import portfolioImage from './assets/portfolio.png';
 
+
 function App() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', phoneNumber: '', message: '' });
   const [formStatus, setFormStatus] = useState('');
 
-  // Helper function to get the correct API URL
-  const getApiUrl = () => {
-    // For development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:5000';
-    }
-    // For production - use the same domain as the frontend
-    return window.location.origin;
-  };
-
   useEffect(() => {
-    const fetchPortfolioData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const apiUrl = getApiUrl();
-        console.log('Fetching from:', `${apiUrl}/api/portfolio`);
-        
-        const response = await fetch(`${apiUrl}/api/portfolio`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error('Error fetching portfolio data:', error);
-        setError(error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // This dynamically changes the URL for development vs. production
+    const backendUrl = 'https://your-backend-name.onrender.com';
+    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : backendUrl;
 
-    fetchPortfolioData();
+    fetch(`${apiUrl}/api/portfolio`)
+      .then(response => response.json())
+      .then(result => {
+        setData(result);
+        setIsLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching portfolio data:', error);
+        setIsLoading(false);
+      });
   }, []);
 
   const projectImages = {
@@ -66,7 +45,7 @@ function App() {
   const contactRef = useRef(null);
 
   const scrollToSection = (ref) => {
-    ref.current?.scrollIntoView({ behavior: 'smooth' });
+    ref.current.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleFormChange = (e) => {
@@ -74,13 +53,12 @@ function App() {
   };
 
   const handleFormSubmit = async (e) => {
+    const backendUrl = 'https://your-backend-name.onrender.com';
+    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : backendUrl;
+
     e.preventDefault();
     setFormStatus('Sending...');
-    
     try {
-      const apiUrl = getApiUrl();
-      console.log('Sending contact form to:', `${apiUrl}/api/contact`);
-      
       const response = await fetch(`${apiUrl}/api/contact`, {
         method: 'POST',
         headers: {
@@ -88,49 +66,31 @@ function App() {
         },
         body: JSON.stringify(formData),
       });
-      
+
       const result = await response.json();
-      
-      if (response.ok && result.success) {
-        setFormStatus('✅ Message sent successfully! I\'ll get back to you soon.');
+      if (response.ok) {
+        setFormStatus('Message sent successfully!');
         setFormData({ name: '', email: '', phoneNumber: '', message: '' });
       } else {
-        setFormStatus(`❌ ${result.message || 'Failed to send message.'}`);
+        setFormStatus(result.message || 'Failed to send message.');
       }
     } catch (error) {
-      console.error('Form submission error:', error);
-      setFormStatus('❌ Failed to send message. Please try again or contact me directly.');
+      setFormStatus('Failed to send message.');
     }
   };
 
-  // Loading state
   if (isLoading) {
-    return (
-      <div className="loading">
-        <div className="loading-spinner"></div>
-        <p>Loading portfolio...</p>
-      </div>
-    );
+    return <div className="loading">Loading...</div>;
   }
 
-  // Error state
-  if (error || !data) {
-    return (
-      <div className="error">
-        <h2>Oops! Something went wrong</h2>
-        <p>Failed to load portfolio data: {error}</p>
-        <button onClick={() => window.location.reload()} className="retry-button">
-          Try Again
-        </button>
-        <p>Or contact me directly at: muthukaruppan2005@gmail.com</p>
-      </div>
-    );
+  if (!data) {
+    return <div className="error">Failed to load portfolio data. Please check your backend server.</div>;
   }
 
   return (
     <div className="portfolio-container">
       <nav className="navbar">
-        <span className="logo" onClick={() => scrollToSection(homeRef)}>MK</span>
+        <span className="logo" onClick={() => scrollToSection(homeRef)}>K N M</span>
         <div className="nav-links">
           <a onClick={() => scrollToSection(homeRef)}>Home</a>
           <a onClick={() => scrollToSection(aboutRef)}>About</a>
@@ -143,10 +103,10 @@ function App() {
 
       <section ref={homeRef} className="hero-section">
         <h2 className="hero-welcome">Welcome to my portfolio</h2>
-        <h1 className="hero-greeting">Hi, I'm Muthukaruppan 👋</h1>
+        <h1 className="hero-greeting">Hi, I'm Muthukaruppan KN M 👋</h1>
         <p className="hero-tagline">{data.profile.tagline}</p>
         <a href="/Muthukaruppan_Resume.pdf" download="Muthukaruppan_Resume.pdf" className="resume-button">
-          Get My Resume
+          Download Resume
         </a>
       </section>
 
@@ -164,14 +124,7 @@ function App() {
         <div className="projects-grid">
           {data.projects.map(project => (
             <div key={project.id} className="project-card">
-              <img 
-                src={projectImages[project.title] || project.image_url} 
-                alt={`${project.title} screenshot`} 
-                className="project-image"
-                onError={(e) => {
-                  e.target.src = project.image_url; // Fallback to placeholder
-                }}
-              />
+              <img src={projectImages[project.title] || project.image_url} alt={`${project.title} screenshot`} className="project-image" />
               <h3>{project.title}</h3>
               <p>{project.description}</p>
               <div className="tech-tags">
@@ -229,7 +182,6 @@ function App() {
                   onChange={handleFormChange}
                   required={field.required}
                   placeholder={field.placeholder}
-                  rows="5"
                 ></textarea>
               ) : (
                 <input
@@ -244,15 +196,9 @@ function App() {
               )}
             </div>
           ))}
-          <button type="submit" className="submit-button" disabled={formStatus === 'Sending...'}>
-            {formStatus === 'Sending...' ? 'Sending...' : 'Send Message'}
-          </button>
+          <button type="submit" className="submit-button">Send Message</button>
         </form>
-        {formStatus && (
-          <div className={`form-status ${formStatus.includes('✅') ? 'success' : 'error'}`}>
-            {formStatus}
-          </div>
-        )}
+        {formStatus && <p className="form-status">{formStatus}</p>}
       </section>
 
       <footer className="footer-section">
@@ -263,11 +209,13 @@ function App() {
           <FooterLink href={`mailto:${data.profile.contact.email}`} icon={FaEnvelope} />
           <FooterLink href={`tel:${data.profile.contact.phone}`} icon={FaPhone} />
         </div>
-        <p className="footer-copyright">&copy; {new Date().getFullYear()} Muthukaruppan. All rights reserved.</p>
+        <p className="footer-copyright">&copy; {new Date().getFullYear()} Muthukaruppan KN M. All rights reserved.</p>
       </footer>
     </div>
   );
 }
+
+export default App;
 
 // Helper component for footer links to keep the code clean
 function FooterLink({ href, icon: Icon }) {
@@ -277,5 +225,3 @@ function FooterLink({ href, icon: Icon }) {
     </a>
   );
 }
-
-export default App;
