@@ -87,7 +87,7 @@ function App() {
   return (
     <div className="portfolio-container">
       <nav className="navbar">
-        <span className="logo" onClick={() => scrollToSection(homeRef)}>K N M</span>
+        <span className="logo" onClick={() => scrollToSection(homeRef)}>MK</span>
         <div className="nav-links">
           <a onClick={() => scrollToSection(homeRef)}>Home</a>
           <a onClick={() => scrollToSection(aboutRef)}>About</a>
