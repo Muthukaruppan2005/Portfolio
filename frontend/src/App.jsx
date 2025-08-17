@@ -13,11 +13,8 @@ function App() {
   const [formData, setFormData] = useState({ name: '', email: '', phoneNumber: '', message: '' });
   const [formStatus, setFormStatus] = useState('');
 
-  // This will be your deployed backend URL. Use a placeholder for now.
-  const backendUrl = 'https://your-backend-name.onrender.com';
-
   useEffect(() => {
-    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : backendUrl;
+    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
     fetch(`${apiUrl}/api/portfolio`)
       .then(response => response.json())
@@ -54,7 +51,7 @@ function App() {
   };
 
   const handleFormSubmit = async (e) => {
-    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : backendUrl;
+    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
     e.preventDefault();
     setFormStatus('Sending...');
@@ -217,6 +214,7 @@ function App() {
 
 export default App;
 
+// Helper component for footer links to keep the code clean
 function FooterLink({ href, icon: Icon }) {
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className="footer-link">
