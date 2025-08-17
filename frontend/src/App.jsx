@@ -89,7 +89,7 @@ function App() {
   return (
     <div className="portfolio-container">
       <nav className="navbar">
-        <span className="logo" onClick={() => scrollToSection(homeRef)}>K N M</span>
+        <span className="logo" onClick={() => scrollToSection(homeRef)}>MK</span>
         <div className="nav-links">
           <a onClick={() => scrollToSection(homeRef)}>Home</a>
           <a onClick={() => scrollToSection(aboutRef)}>About</a>
@@ -102,7 +102,7 @@ function App() {
 
       <section ref={homeRef} className="hero-section">
         <h2 className="hero-welcome">Welcome to my portfolio</h2>
-        <h1 className="hero-greeting">Hi, I'm Muthukaruppan KN M 👋</h1>
+        <h1 className="hero-greeting">Hi, I'm Muthukaruppan 👋</h1>
         <p className="hero-tagline">{data.profile.tagline}</p>
         <a href="/Muthukaruppan_Resume.pdf" download="Muthukaruppan_Resume.pdf" className="resume-button">
           Download Resume
@@ -208,7 +208,7 @@ function App() {
           <FooterLink href={`mailto:${data.profile.contact.email}`} icon={FaEnvelope} />
           <FooterLink href={`tel:${data.profile.contact.phone}`} icon={FaPhone} />
         </div>
-        <p className="footer-copyright">&copy; {new Date().getFullYear()} Muthukaruppan KN M. All rights reserved.</p>
+        <p className="footer-copyright">&copy; {new Date().getFullYear()} Muthukaruppan. All rights reserved.</p>
       </footer>
     </div>
   );
