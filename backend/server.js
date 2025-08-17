@@ -56,6 +56,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Portfolio data
 const portfolioData = {
   profile: {
     name: 'Muthukaruppan KN M',
@@ -189,18 +190,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Backend is running' });
 });
 
-// Handle undefined /api routes with 404
+// 404 handler for undefined /api/ routes
 app.use('/api/', (req, res) => {
   res.status(404).json({ error: 'API route not found' });
 });
 
 const PORT = process.env.PORT || 5000;
 
-// Start server only in development mode
+// Start server only in development (localhost)
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
 }
 
+// Export app for serverless deployment on Vercel
 module.exports = app;
