@@ -13,13 +13,15 @@
       "use": "@vercel/node"
     }
   ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/backend/server.js"
-    }
-  ],
   "routes": [
+    {
+      "src": "/api/portfolio",
+      "dest": "/api/portfolio.js"
+    },
+    {
+      "src": "/api/contact",
+      "dest": "/api/portfolio.js"
+    },
     {
       "src": "/(.*)",
       "dest": "frontend/dist/index.html"
