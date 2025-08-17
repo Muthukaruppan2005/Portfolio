@@ -14,21 +14,20 @@ const contactSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 });
 
-const Contact = mongoose.model('Contact', contactSchema);
+// Use existing model if exists to avoid OverwriteModelError in serverless environments
+const Contact = mongoose.models.Contact || mongoose.model('Contact', contactSchema);
 
 const app = express();
 
 // MongoDB connection function optimized for serverless
 const connectToDatabase = async () => {
-  if (mongoose.connection.readyState >= 1) {
-    return mongoose.connection;
-  }
-  
+  if (mongoose.connection.readyState >= 1) return mongoose.connection;
+
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      maxPoolSize: 1, // Important for serverless
+      maxPoolSize: 1, // important for serverless
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
@@ -40,13 +39,13 @@ const connectToDatabase = async () => {
   }
 };
 
-// CORS configuration - UPDATE WITH YOUR ACTUAL VERCEL URL
+// CORS configuration - Update with your actual deployed frontend URL
 const corsOptions = {
   origin: [
     'http://localhost:3000',
-    'http://localhost:5173', // Vite dev server
-    'https://portfolio-muthukaruppan2005.vercel.app', // Replace with your actual Vercel URL
-    'https://*.vercel.app' // Allow all Vercel preview deployments
+    'http://localhost:5173', // vite dev server url
+    'https://portfolio-muthukaruppan2005.vercel.app', // replace with your Vercel URL
+    'https://*.vercel.app' // allow all preview deployments
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -147,7 +146,6 @@ const portfolioData = {
   }
 };
 
-// API Routes
 app.get('/api/portfolio', (req, res) => {
   try {
     res.json(portfolioData);
@@ -186,7 +184,6 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Backend is running' });
 });
@@ -196,15 +193,12 @@ app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API route not found' });
 });
 
-// Server configuration for different environments
 const PORT = process.env.PORT || 5000;
 
-// Only listen on port in development
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
 }
 
-// Export the Express app for Vercel serverless functions
 module.exports = app;
