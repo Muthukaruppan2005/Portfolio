@@ -13,8 +13,10 @@ function App() {
   const [formData, setFormData] = useState({ name: '', email: '', phoneNumber: '', message: '' });
   const [formStatus, setFormStatus] = useState('');
 
-  // Declare apiUrl once at the top of the component
-  const backendUrl = process.env.NODE_ENV === 'production' ? 'https://your-backend-app-name.onrender.com' : 'http://localhost:5000';
+ 
+  // Replace the placeholder URL with your live Render backend URL
+  const backendUrl = 'https://portfolio-backend-btyw.onrender.com';
+
 
   useEffect(() => {
     fetch(`${backendUrl}/api/portfolio`)
