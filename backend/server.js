@@ -1,11 +1,11 @@
-// Load environment variables for security.
+// Load environment variables
 require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
-// Define the Contact schema and model.
+// Define the Contact schema and model
 const contactSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
@@ -13,27 +13,28 @@ const contactSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: false },
   date: { type: Date, default: Date.now }
 });
-
 const Contact = mongoose.model('Contact', contactSchema);
 
+// Create the Express app
 const app = express();
-const port = 5000;
 
-// Connect to MongoDB using the URI from your .env file.
+// Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Your portfolio data
 const portfolioData = {
   profile: {
-    name: 'Muthukaruppan K N M',
+    name: 'Muthukaruppan KN M',
     tagline: 'A passionate Computer Science and Engineering student.',
     about: [
-      'Hi, I’m Muthukaruppan 👋',
-      'I am a Computer Science Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible.',
+      'Hi, I’m Muthukaruppan KN M 👋',
+      'I am a Computer Science and Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible.',
       'I have hands-on experience as a Data Analyst Intern and a strong foundation in C, Java, Data Structures, and problem-solving. Outside academics, I like experimenting with creative ideas, exploring new technologies, and solving problems through logic and design.',
     ],
     contact: {
@@ -46,24 +47,24 @@ const portfolioData = {
   projects: [
     {
       id: 1,
+      title: 'Portfolio Website',
+      description: 'Developed my personal portfolio using React and deployed it on Vercel. Designed a responsive UI with a clean, modern layout for showcasing my work.',
+      tech: ['React.js', 'HTML5', 'CSS3', 'Vercel'],
+      image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Portfolio+Website'
+    },
+    {
+      id: 2,
       title: 'Alumini Connect',
       description: 'A web application designed to connect alumni with current students of the institution, enabling knowledge sharing, mentorship, and networking opportunities.',
       tech: ['React.js', 'HTML5', 'CSS3', 'Tailwind CSS', 'Node.js', 'Express.js', 'MongoDB', 'GitHub', 'VS Code', 'Netlify/Render'],
       image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Alumini+Connect+Platform'
     },
     {
-      id: 2,
+      id: 3,
       title: 'Power BI Dashboards',
       description: 'Built interactive dashboards for business insights. Worked with sales, customer, and performance datasets. Used filters, KPIs, and drill-down visuals to improve decision-making.',
       tech: ['Power BI', 'DAX', 'Data Visualization'],
       image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Power+BI+Dashboards'
-    },
-    {
-      id: 3,
-      title: 'Portfolio Website',
-      description: 'Developed my personal portfolio using React and deployed it on Vercel. Designed a responsive UI with a clean, modern layout for showcasing my work.',
-      tech: ['React.js', 'HTML5', 'CSS3', 'Vercel'],
-      image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Portfolio+Website'
     },
     {
       id: 4,
@@ -119,10 +120,12 @@ const portfolioData = {
   }
 };
 
+// API endpoint to serve your portfolio data.
 app.get('/api/portfolio', (req, res) => {
   res.json(portfolioData);
 });
 
+// API endpoint to handle contact form submissions.
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, phoneNumber, message } = req.body;
@@ -135,6 +138,5 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+// Export the app instance for Vercel
+module.exports = app;
