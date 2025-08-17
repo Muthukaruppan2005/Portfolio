@@ -6,19 +6,18 @@ import aluminiImage from './assets/alumini.png';
 import vrImage from './assets/vr.png';
 import portfolioImage from './assets/portfolio.png';
 
+
 function App() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '', phoneNumber: '', message: '' });
   const [formStatus, setFormStatus] = useState('');
 
-  useEffect(() => {
-    // Replace 'your-backend-app-name' with your actual Render app name
-    const apiUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://your-backend-app-name.onrender.com' 
-      : 'http://localhost:5000';
+  // Declare apiUrl once at the top of the component
+  const backendUrl = process.env.NODE_ENV === 'production' ? 'https://your-backend-app-name.onrender.com' : 'http://localhost:5000';
 
-    fetch(`${apiUrl}/api/portfolio`)
+  useEffect(() => {
+    fetch(`${backendUrl}/api/portfolio`)
       .then(response => response.json())
       .then(result => {
         setData(result);
@@ -28,7 +27,7 @@ function App() {
         console.error('Error fetching portfolio data:', error);
         setIsLoading(false);
       });
-  }, []);
+  }, [backendUrl]);
 
   const projectImages = {
     'Alumini Connect': aluminiImage,
@@ -55,14 +54,8 @@ function App() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setFormStatus('Sending...');
-    
-    // Replace 'your-backend-app-name' with your actual Render app name
-    const apiUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://your-backend-app-name.onrender.com' 
-      : 'http://localhost:5000';
-
     try {
-      const response = await fetch(`${apiUrl}/api/contact`, {
+      const response = await fetch(`${backendUrl}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +87,7 @@ function App() {
   return (
     <div className="portfolio-container">
       <nav className="navbar">
-        <span className="logo" onClick={() => scrollToSection(homeRef)}>MK</span>
+        <span className="logo" onClick={() => scrollToSection(homeRef)}>K N M</span>
         <div className="nav-links">
           <a onClick={() => scrollToSection(homeRef)}>Home</a>
           <a onClick={() => scrollToSection(aboutRef)}>About</a>
@@ -107,10 +100,10 @@ function App() {
 
       <section ref={homeRef} className="hero-section">
         <h2 className="hero-welcome">Welcome to my portfolio</h2>
-        <h1 className="hero-greeting">Hi, I'm Muthukaruppan 👋</h1>
+        <h1 className="hero-greeting">Hi, I'm Muthukaruppan KN M 👋</h1>
         <p className="hero-tagline">{data.profile.tagline}</p>
         <a href="/Muthukaruppan_Resume.pdf" download="Muthukaruppan_Resume.pdf" className="resume-button">
-          Get My Resume
+          Download Resume
         </a>
       </section>
 
@@ -221,7 +214,6 @@ function App() {
 
 export default App;
 
-// Helper component for footer links to keep the code clean
 function FooterLink({ href, icon: Icon }) {
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className="footer-link">
