@@ -107,10 +107,10 @@ function App() {
 
       <section ref={homeRef} className="hero-section">
         <h2 className="hero-welcome">Welcome to my portfolio</h2>
-        <h1 className="hero-greeting">Hi, I'm Muthukaruppan KN M 👋</h1>
+        <h1 className="hero-greeting">Hi, I'm Muthukaruppan 👋</h1>
         <p className="hero-tagline">{data.profile.tagline}</p>
         <a href="/Muthukaruppan_Resume.pdf" download="Muthukaruppan_Resume.pdf" className="resume-button">
-          Download Resume
+          Get My Resume
         </a>
       </section>
 
