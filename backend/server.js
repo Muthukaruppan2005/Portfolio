@@ -1,4 +1,4 @@
-// Load environment variables securely
+// Load environment variables for security.
 require('dotenv').config();
 
 const express = require('express');
@@ -17,38 +17,23 @@ const contactSchema = new mongoose.Schema({
 const Contact = mongoose.model('Contact', contactSchema);
 
 const app = express();
+const port = 5000;
 
 // Connect to MongoDB using the URI from your .env file.
-const connectToDatabase = async () => {
-  if (mongoose.connection.readyState >= 1) {
-    return mongoose.connection;
-  }
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      maxPoolSize: 1,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-    console.log('MongoDB connected successfully');
-    return mongoose.connection;
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
-  }
-};
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 app.use(cors());
 app.use(express.json());
 
-// Your portfolio data
 const portfolioData = {
   profile: {
     name: 'Muthukaruppan KN M',
     tagline: 'A passionate Computer Science and Engineering student.',
     about: [
       "Hi, I'm Muthukaruppan KN M 👋",
-      "I'm a Computer Science and Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible.",
-      "I have hands-on experience as a Data Analyst Intern and a strong foundation in C, Java, Data Structures, and problem-solving. Outside academics, I like experimenting with creative ideas, exploring new technologies, and solving problems through logic and design."
+      "I'm a Computer Science and Engineering student passionate about building real-world solutions with technology. I enjoy working with web development, data visualization, and problem-solving. My goal is to create applications that are functional, user-friendly, and accessible. Outside academics, I like experimenting with creative ideas, exploring new technologies, and solving problems through logic and design."
     ],
     contact: {
       email: 'muthukaruppan2005@gmail.com',
@@ -133,55 +118,23 @@ const portfolioData = {
   }
 };
 
-// API endpoint to serve your portfolio data.
-app.get('/api/portfolio', async (req, res) => {
-  try {
-    await connectToDatabase();
-    res.json(portfolioData);
-  } catch (error) {
-    console.error('Portfolio API error:', error);
-    res.status(500).json({ error: 'Failed to fetch portfolio data' });
-  }
+app.get('/api/portfolio', (req, res) => {
+  res.json(portfolioData);
 });
 
-// API endpoint to handle contact form submissions.
 app.post('/api/contact', async (req, res) => {
   try {
-    await connectToDatabase();
-
     const { name, email, phoneNumber, message } = req.body;
-
-    if (!name || !email || !message) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name, email, and message are required.'
-      });
-    }
-
     const newContact = new Contact({ name, email, phoneNumber, message });
     await newContact.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Message sent successfully!'
-    });
+    res.status(201).json({ success: true, message: 'Message sent successfully!' });
   } catch (error) {
-    console.error('Contact form error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to send message. Please try again.'
-    });
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to send message.' });
   }
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Backend is running' });
+// Start the server and make it listen for requests.
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
-
-// 404 handler for undefined /api/ routes
-app.use('/api/', (req, res) => {
-  res.status(404).json({ error: 'API route not found' });
-});
-
-// Export app for serverless deployment on Vercel
-module.exports = app;

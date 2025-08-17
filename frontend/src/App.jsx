@@ -6,17 +6,17 @@ import aluminiImage from './assets/alumini.png';
 import vrImage from './assets/vr.png';
 import portfolioImage from './assets/portfolio.png';
 
+
 function App() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '', phoneNumber: '', message: '' });
   const [formStatus, setFormStatus] = useState('');
 
-  // No need for a backendUrl variable anymore
-  // The fetch calls will use a relative path
-
   useEffect(() => {
-    fetch(`/api/portfolio`) // Use a relative path
+    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+
+    fetch(`${apiUrl}/api/portfolio`)
       .then(response => response.json())
       .then(result => {
         setData(result);
@@ -51,10 +51,12 @@ function App() {
   };
 
   const handleFormSubmit = async (e) => {
+    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+
     e.preventDefault();
     setFormStatus('Sending...');
     try {
-      const response = await fetch(`/api/contact`, { // Use a relative path
+      const response = await fetch(`${apiUrl}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,8 +72,7 @@ function App() {
         setFormStatus(result.message || 'Failed to send message.');
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      setFormStatus('Failed to send message. Please try again.');
+      setFormStatus('Failed to send message.');
     }
   };
 
