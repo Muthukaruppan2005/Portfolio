@@ -17,14 +17,43 @@ const contactSchema = new mongoose.Schema({
 const Contact = mongoose.model('Contact', contactSchema);
 
 const app = express();
-const port = 5000;
 
-// Connect to MongoDB using the URI from your .env file.
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// MongoDB connection function optimized for serverless
+const connectToDatabase = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    return mongoose.connection;
+  }
+  
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      maxPoolSize: 1, // Important for serverless
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    console.log('MongoDB connected successfully');
+    return mongoose.connection;
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+};
 
-app.use(cors());
+// CORS configuration - UPDATE WITH YOUR ACTUAL VERCEL URL
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173', // Vite dev server
+    'https://portfolio-muthukaruppan2005.vercel.app', // Replace with your actual Vercel URL
+    'https://*.vercel.app' // Allow all Vercel preview deployments
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const portfolioData = {
@@ -45,24 +74,24 @@ const portfolioData = {
   projects: [
     {
       id: 1,
+      title: 'Portfolio Website',
+      description: 'Developed my personal portfolio using React and deployed it on Vercel. Designed a responsive UI with a clean, modern layout for showcasing my work.',
+      tech: ['React.js', 'HTML5', 'CSS3', 'Vercel'],
+      image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Portfolio+Website'
+    },
+    {
+      id: 2,
       title: 'Alumini Connect',
       description: 'A web application designed to connect alumni with current students of the institution, enabling knowledge sharing, mentorship, and networking opportunities.',
       tech: ['React.js', 'HTML5', 'CSS3', 'Tailwind CSS', 'Node.js', 'Express.js', 'MongoDB', 'GitHub', 'VS Code', 'Netlify/Render'],
       image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Alumini+Connect+Platform'
     },
     {
-      id: 2,
+      id: 3,
       title: 'Power BI Dashboards',
       description: 'Built interactive dashboards for business insights. Worked with sales, customer, and performance datasets. Used filters, KPIs, and drill-down visuals to improve decision-making.',
       tech: ['Power BI', 'DAX', 'Data Visualization'],
       image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Power+BI+Dashboards'
-    },
-    {
-      id: 3,
-      title: 'Portfolio Website',
-      description: 'Developed my personal portfolio using React and deployed it on Vercel. Designed a responsive UI with a clean, modern layout for showcasing my work.',
-      tech: ['React.js', 'HTML5', 'CSS3', 'Vercel'],
-      image_url: 'https://placehold.co/600x400/292F38/FFFFFF/png?text=Portfolio+Website'
     },
     {
       id: 4,
@@ -118,23 +147,64 @@ const portfolioData = {
   }
 };
 
+// API Routes
 app.get('/api/portfolio', (req, res) => {
-  res.json(portfolioData);
+  try {
+    res.json(portfolioData);
+  } catch (error) {
+    console.error('Portfolio API error:', error);
+    res.status(500).json({ error: 'Failed to fetch portfolio data' });
+  }
 });
 
 app.post('/api/contact', async (req, res) => {
   try {
+    await connectToDatabase();
+    
     const { name, email, phoneNumber, message } = req.body;
+    
+    if (!name || !email || !message) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Name, email, and message are required.' 
+      });
+    }
+    
     const newContact = new Contact({ name, email, phoneNumber, message });
     await newContact.save();
-    res.status(201).json({ success: true, message: 'Message sent successfully!' });
+    
+    res.status(201).json({ 
+      success: true, 
+      message: 'Message sent successfully!' 
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to send message.' });
+    console.error('Contact form error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send message. Please try again.' 
+    });
   }
 });
 
-// Start the server and make it listen for requests.
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Backend is running' });
 });
+
+// Handle 404 for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
+});
+
+// Server configuration for different environments
+const PORT = process.env.PORT || 5000;
+
+// Only listen on port in development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
+
+// Export the Express app for Vercel serverless functions
+module.exports = app;

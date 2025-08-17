@@ -14,7 +14,6 @@ function App() {
   const [formStatus, setFormStatus] = useState('');
 
   useEffect(() => {
-    // This dynamically changes the URL for development vs. production
     const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
 
     fetch(`${apiUrl}/api/portfolio`)
@@ -55,7 +54,8 @@ function App() {
     e.preventDefault();
     setFormStatus('Sending...');
     try {
-      const response = await fetch('/api/contact', {
+      const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+      const response = await fetch(`${apiUrl}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
