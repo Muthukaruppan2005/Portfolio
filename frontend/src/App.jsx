@@ -6,7 +6,6 @@ import aluminiImage from './assets/alumini.png';
 import vrImage from './assets/vr.png';
 import portfolioImage from './assets/portfolio.png';
 
-
 function App() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,7 +13,10 @@ function App() {
   const [formStatus, setFormStatus] = useState('');
 
   useEffect(() => {
-    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+    // Replace 'your-backend-app-name' with your actual Render app name
+    const apiUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://your-backend-app-name.onrender.com' 
+      : 'http://localhost:5000';
 
     fetch(`${apiUrl}/api/portfolio`)
       .then(response => response.json())
@@ -51,10 +53,14 @@ function App() {
   };
 
   const handleFormSubmit = async (e) => {
-    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
-
     e.preventDefault();
     setFormStatus('Sending...');
+    
+    // Replace 'your-backend-app-name' with your actual Render app name
+    const apiUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://your-backend-app-name.onrender.com' 
+      : 'http://localhost:5000';
+
     try {
       const response = await fetch(`${apiUrl}/api/contact`, {
         method: 'POST',
@@ -72,7 +78,8 @@ function App() {
         setFormStatus(result.message || 'Failed to send message.');
       }
     } catch (error) {
-      setFormStatus('Failed to send message.');
+      console.error('Error sending message:', error);
+      setFormStatus('Failed to send message. Please try again.');
     }
   };
 
