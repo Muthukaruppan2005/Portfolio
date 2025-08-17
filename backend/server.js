@@ -1,4 +1,4 @@
-// Load environment variables securely
+// backend/server.js - Serverless version for Vercel
 require('dotenv').config();
 
 const express = require('express');
@@ -29,6 +29,8 @@ const connectToDatabase = async () => {
       maxPoolSize: 1, // Important for serverless
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      bufferCommands: false, // Disable mongoose buffering
+      bufferMaxEntries: 0 // Disable mongoose buffering
     });
     console.log('MongoDB connected successfully');
     return mongoose.connection;
@@ -38,21 +40,22 @@ const connectToDatabase = async () => {
   }
 };
 
-// CORS config — update the origin with your deployed frontend URL
+// CORS config - update with your actual frontend URLs
 const corsOptions = {
   origin: [
     'http://localhost:3000',
-    'http://localhost:5173', // Vite dev server if used
-    'https://portfolio-muthukaruppan2005.vercel.app', // Replace with your Vercel frontend URL
+    'http://localhost:5173', // Vite dev server
+    'https://your-portfolio-frontend.vercel.app', // Replace with your actual frontend URL
     'https://*.vercel.app' // Allow preview deployments
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Portfolio data
 const portfolioData = {
@@ -146,10 +149,20 @@ const portfolioData = {
   }
 };
 
-// API endpoint to serve your portfolio data.
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Backend is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Portfolio endpoint
 app.get('/api/portfolio', async (req, res) => {
   try {
-    await connectToDatabase();
+    console.log('Portfolio data requested');
     res.json(portfolioData);
   } catch (error) {
     console.error('Portfolio API error:', error);
@@ -157,13 +170,14 @@ app.get('/api/portfolio', async (req, res) => {
   }
 });
 
-// API endpoint to handle contact form submissions.
+// Contact form endpoint
 app.post('/api/contact', async (req, res) => {
   try {
     await connectToDatabase();
 
     const { name, email, phoneNumber, message } = req.body;
 
+    // Validation
     if (!name || !email || !message) {
       return res.status(400).json({
         success: false,
@@ -171,39 +185,80 @@ app.post('/api/contact', async (req, res) => {
       });
     }
 
-    const newContact = new Contact({ name, email, phoneNumber, message });
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid email address.'
+      });
+    }
+
+    const newContact = new Contact({ 
+      name: name.trim(), 
+      email: email.trim().toLowerCase(), 
+      phoneNumber: phoneNumber ? phoneNumber.trim() : undefined, 
+      message: message.trim() 
+    });
+
     await newContact.save();
+
+    console.log('New contact saved:', { name, email });
 
     res.status(201).json({
       success: true,
-      message: 'Message sent successfully!'
+      message: 'Message sent successfully! I\'ll get back to you soon.'
     });
+
   } catch (error) {
     console.error('Contact form error:', error);
+    
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Please check your input and try again.'
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Failed to send message. Please try again.'
+      message: 'Failed to send message. Please try again later.'
     });
   }
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Backend is running' });
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+// 404 handler for undefined API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ 
+    error: 'API route not found',
+    path: req.path,
+    method: req.method 
+  });
 });
 
-// 404 handler for undefined /api/ routes
-app.use('/api/', (req, res) => {
-  res.status(404).json({ error: 'API route not found' });
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
 });
 
 const PORT = process.env.PORT || 5000;
 
-// Start server only in development (localhost)
+// Only start server in development
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📊 Portfolio API: http://localhost:${PORT}/api/portfolio`);
+    console.log(`💬 Contact API: http://localhost:${PORT}/api/contact`);
+    console.log(`❤️  Health check: http://localhost:${PORT}/api/health`);
   });
 }
 
-// Export app for serverless deployment on Vercel
+// Export for Vercel
 module.exports = app;
