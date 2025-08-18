@@ -103,7 +103,7 @@ function App() {
         <h1 className="hero-greeting">Hi, I'm Muthukaruppan 👋</h1>
         <p className="hero-tagline">{data.profile.tagline}</p>
         <a href="/Muthukaruppan_Resume.pdf" download="Muthukaruppan_Resume.pdf" className="resume-button">
-          Download Resume
+          Get My Resume
         </a>
       </section>
 
