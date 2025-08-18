@@ -127,14 +127,11 @@ export default async function handler(req, res) {
   } else if (req.method === 'POST') {
     try {
       const { name, email, phoneNumber, message } = req.body;
-
       if (!name || !email || !message) {
         return res.status(400).json({ success: false, message: 'Name, email, and message are required.' });
       }
-
       const newContact = new Contact({ name, email, phoneNumber, message });
       await newContact.save();
-
       res.status(201).json({ success: true, message: 'Message sent successfully!' });
     } catch (err) {
       console.error('Contact form error:', err);

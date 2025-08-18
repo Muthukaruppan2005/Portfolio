@@ -56,7 +56,7 @@ function App() {
     e.preventDefault();
     setFormStatus('Sending...');
     try {
-      const response = await fetch(`${apiUrl}/api/contact`, {
+      const response = await fetch(`${apiUrl}/api/portfolio`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
