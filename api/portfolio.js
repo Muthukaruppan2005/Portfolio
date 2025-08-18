@@ -8,7 +8,7 @@ async function connectDB() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
-      useUnifiedTopology: true,
+      //useUnifiedTopology: true,
     });
     isConnected = true;
     console.log('MongoDB connected successfully for serverless function.');
